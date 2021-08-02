@@ -26,6 +26,7 @@ jobs:
         sudo apt-get update -y
         sudo apt-get install -y gcovr ninja-build
 
+    ## Building
     - name: Configure CMake Z3
       run: CXXFLAGS=--coverage LDFLAGS=-lgcov cmake -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=./install
 
@@ -34,11 +35,12 @@ jobs:
       run: cmake --build ${{github.workspace}}/build --target install --config ${{env.BUILD_TYPE}}
 
     - name: Build test-z3
-      run: cmake -B ${{github.workspace}}/build --target test-z3 -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      run: cmake --build ${{github.workspace}}/build --target test-z3 --config ${{env.BUILD_TYPE}}
 
     - name: Clone z3test
       run: git clone https://github.com/z3prover/z3test z3test
 
+    ## Testing
     - name: Run test-z3
       run: |
         cd ${{github.workspace}}/build
@@ -51,7 +53,7 @@ jobs:
     - name: Run coverage tests
       run: python z3test/scripts/test_coverage_tests.py ./install z3test/coverage/cpp
 
-
+    ## Artifact
     - name: Gather coverage
       run: |
         gcovr --html -o coverage.html ${{github.workspace}}
