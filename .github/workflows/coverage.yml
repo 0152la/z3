@@ -3,8 +3,8 @@ name: Code Coverage
 on:
   push:
     branches: [ master ]
-  pull_request:
-    branches: [ master ]
+  #schedule:
+    #- cron "0 11 * * *"
 
 env:
   BUILD_TYPE: Debug
@@ -33,4 +33,17 @@ jobs:
       run: python z3test/scripts/test_coverage_tests.py ./install z3test/coverage/cpp
 
     - name: Gather coverage
-      run: gcovr --html -o coverage.html .
+      run: |
+        sudo apt-get update
+        sudo apt-get install gcovr
+        gcovr --html -o coverage.html .
+
+    - name: Get date
+      id: date
+      run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: coverage-${{ steps.date.outputs.date }}.html
+        path: coverage.html
+        retention-days: 10
