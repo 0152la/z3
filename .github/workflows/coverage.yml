@@ -8,6 +8,7 @@ on:
 
 env:
   BUILD_TYPE: Debug
+  CMAKE_GENERATOR: Ninja
 
 jobs:
   build:
@@ -28,7 +29,7 @@ jobs:
 
     ## Building
     - name: Configure CMake Z3
-      run: CXXFLAGS=--coverage LDFLAGS=-lgcov cmake -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=./install
+      run: CXXFLAGS=--coverage LDFLAGS=-lgcov cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=./install
 
     - name: Build Z3
       # Build your program with the given configuration
@@ -37,6 +38,13 @@ jobs:
     - name: Build test-z3
       run: cmake --build ${{github.workspace}}/build --target test-z3 --config ${{env.BUILD_TYPE}}
 
+    - name: Build examples
+      run: |
+        cmake --build ${{github.workspace}}/build --target c_example
+        cmake --build ${{github.workspace}}/build --target cpp_example
+        cmake --build ${{github.workspace}}/build --target z3_tptp5
+        cmake --build ${{github.workspace}}/build --target c_maxsat_example
+
     - name: Clone z3test
       run: git clone https://github.com/z3prover/z3test z3test
 
@@ -44,8 +52,15 @@ jobs:
     - name: Run test-z3
       run: |
         cd ${{github.workspace}}/build
-        test-z3 -a
+        #./test-z3 -a
         cd -
+
+    - name: Run examples
+      run: |
+        ${{github.workspace}}/build/examples/c_example_build_dir/c_example
+        ${{github.workspace}}/build/examples/cpp_example_build_dir/cpp_example
+        ${{github.workspace}}/build/examples/tptp_build_dir/z3_tptp5 --help
+        ${{github.workspace}}/build/examples/c_maxsat_example_build_dir/c_maxsat_example ${{github.workspace}}/examples/maxsat/ex.smt
 
     - name: Run regressions
       run: python z3test/scripts/test_benchmarks.py build/z3 z3test/regressions/smt2-debug
