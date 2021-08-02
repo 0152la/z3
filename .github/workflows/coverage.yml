@@ -20,6 +20,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: Setup
+      run: |
+        sudo apt-get remove -y --purge man-db
+        sudo apt-get update -y
+        sudo apt-get install -y gcovr ninja-build
+
     - name: Configure CMake Z3
       run: CXXFLAGS=--coverage LDFLAGS=-lgcov cmake -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=./install
 
@@ -48,9 +54,6 @@ jobs:
 
     - name: Gather coverage
       run: |
-        sudo apt-get remove -y --purge man-db
-        sudo apt-get update
-        sudo apt-get install gcovr
         gcovr --html -o coverage.html ${{github.workspace}}
 
     - name: Get date
