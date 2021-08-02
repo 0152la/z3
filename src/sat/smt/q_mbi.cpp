@@ -42,6 +42,7 @@ namespace q {
         add_plugin(ap);
         add_plugin(alloc(mbp::datatype_project_plugin, m));
         add_plugin(alloc(mbp::array_project_plugin, m));
+        
     }
 
     lbool mbqi::operator()() {
@@ -66,10 +67,11 @@ namespace q {
             }
         }
         m_max_cex += ctx.get_config().m_mbqi_max_cexs;
-        for (auto p : m_instantiations) {
-            unsigned generation = std::get<2>(p);
+        for (auto [qlit, fml, generation] : m_instantiations) {
             euf::solver::scoped_generation sg(ctx, generation + 1);
-            m_qs.add_clause(~std::get<0>(p), ~ctx.mk_literal(std::get<1>(p)));
+            sat::literal lit = ctx.mk_literal(fml);
+            m_qs.add_clause(~qlit, ~lit);
+            ctx.add_root(~qlit, ~lit);
         }
         m_instantiations.reset();
         return result;
@@ -564,7 +566,7 @@ namespace q {
 
     void mbqi::init_solver() {
         if (!m_solver)
-            m_solver = mk_smt2_solver(m, ctx.s().params());
+            m_solver = mk_smt2_solver(m, m_no_drat_params);
     }
 
     void mbqi::init_search() {
