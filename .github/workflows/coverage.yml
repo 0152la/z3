@@ -13,30 +13,45 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      CC: clang
+      CXX: clang++
+
     steps:
     - uses: actions/checkout@v2
 
-    - name: Configure CMake
-      run: CXXFLAGS=--coverage LDFLAGS=-lgcov CC=clang CXX=clang++ cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=./install
+    - name: Configure CMake Z3
+      run: CXXFLAGS=--coverage LDFLAGS=-lgcov cmake -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=./install
 
-    - name: Build
+    - name: Build Z3
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --target install --config ${{env.BUILD_TYPE}}
+
+    - name: Build test-z3
+      run: cmake -B ${{github.workspace}}/build --target test-z3 -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Clone z3test
       run: git clone https://github.com/z3prover/z3test z3test
 
+    - name: Run test-z3
+      run: |
+        cd ${{github.workspace}}/build
+        test-z3 -a
+        cd -
+
     - name: Run regressions
       run: python z3test/scripts/test_benchmarks.py build/z3 z3test/regressions/smt2-debug
 
-    - name: Run coverage
+    - name: Run coverage tests
       run: python z3test/scripts/test_coverage_tests.py ./install z3test/coverage/cpp
+
 
     - name: Gather coverage
       run: |
+        sudo apt-get remove -y --purge man-db
         sudo apt-get update
         sudo apt-get install gcovr
-        gcovr --html -o coverage.html .
+        gcovr --html -o coverage.html ${{github.workspace}}
 
     - name: Get date
       id: date
@@ -44,6 +59,6 @@ jobs:
 
     - uses: actions/upload-artifact@v2
       with:
-        name: coverage-${{ steps.date.outputs.date }}.html
+        name: coverage-${{steps.date.outputs.date}}
         path: coverage.html
         retention-days: 10
