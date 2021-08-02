@@ -71,7 +71,9 @@ jobs:
     ## Artifact
     - name: Gather coverage
       run: |
-        gcovr --html -o coverage.html ${{github.workspace}}
+        cd ${{github.workspace}}
+        gcovr --html -o coverage.html .
+        cd -
 
     - name: Get date
       id: date
