@@ -76,6 +76,7 @@ jobs:
       run: |
         cd ${{github.workspace}}
         ls
+        find . -name "*gcno"
         gcovr
         #gcovr --html -o coverage.html .
         cd -
