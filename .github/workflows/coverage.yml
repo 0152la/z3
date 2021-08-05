@@ -13,7 +13,7 @@ jobs:
     env:
       CC: clang
       CXX: clang++
-      GCOV: llvm-cov gcov
+      GCOV: "llvm-cov gcov"
       BUILD_TYPE: Debug
       CMAKE_GENERATOR: Ninja
 
