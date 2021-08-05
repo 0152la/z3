@@ -13,7 +13,6 @@ jobs:
     env:
       CC: clang
       CXX: clang++
-      GCOV: "llvm-cov gcov"
       BUILD_TYPE: Debug
       CMAKE_GENERATOR: Ninja
 
@@ -72,7 +71,10 @@ jobs:
 
     ## Artifact
     - name: Gather coverage
-      run: gcovr --html -o coverage.html ${{github.workspace}}
+      run: |
+        cd ${{github.workspace}}
+        gcovr --html -o coverage.html --gcov-executable "llvm-cov gcov" .
+        cd -
 
     - name: Get date
       id: date
