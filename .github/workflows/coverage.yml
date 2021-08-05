@@ -44,8 +44,8 @@ jobs:
         cmake --build ${{github.workspace}}/build --target z3_tptp5
         cmake --build ${{github.workspace}}/build --target c_maxsat_example
 
-    #- name: Clone z3test
-      #run: git clone https://github.com/z3prover/z3test z3test
+    - name: Clone z3test
+      run: git clone https://github.com/z3prover/z3test z3test
 
     ## Testing
     #- name: Run test-z3
