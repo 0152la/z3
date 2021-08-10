@@ -71,7 +71,7 @@ jobs:
 
     ## Artifact
     - name: Check
-      rune: |
+      run: |
         cd ${{github.workspace}}
         ls -la
         find . -name "*gcda"
