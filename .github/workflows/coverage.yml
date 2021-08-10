@@ -27,7 +27,7 @@ jobs:
 
     ## Building
     - name: Configure CMake Z3
-      run: CFLAGS=="--coverage" CXXFLAGS="--coverage" LDFLAGS="-lgcov" cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=./install
+      run: CFLAGS=="--coverage" CXXFLAGS="--coverage" LDFLAGS="-lgcov" cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/install
 
     - name: Build Z3
       # Build your program with the given configuration
@@ -70,10 +70,17 @@ jobs:
       run: python z3test/scripts/test_coverage_tests.py ./install z3test/coverage/cpp
 
     ## Artifact
+    - name: Check
+      rune: |
+        cd ${{github.workspace}}
+        ls -la
+        find . -name "*gcda"
+        cd -
+
     - name: Gather coverage
       run: |
         cd ${{github.workspace}}
-        gcovr --html -o coverage.html --gcov-executable "llvm-cov gcov" .
+        gcovr --gcov-executable "llvm-cov gcov" .
         cd -
 
     - name: Get date
