@@ -85,5 +85,5 @@ jobs:
     - uses: actions/upload-artifact@v2
       with:
         name: coverage-${{steps.date.outputs.date}}
-        path: 
+        path: ${{github.workspace}}/cov-report/
         retention-days: 10
