@@ -15,6 +15,7 @@ jobs:
       CXX: clang++
       BUILD_TYPE: Debug
       CMAKE_GENERATOR: Ninja
+      LLVM_PROFILE_FILE: ${{github.workspace}}/coverage_data/cov-%p.profraw
 
     steps:
     - uses: actions/checkout@v2
@@ -27,7 +28,7 @@ jobs:
 
     ## Building
     - name: Configure CMake Z3
-      run: CFLAGS=="--coverage" CXXFLAGS="--coverage" LDFLAGS="-lgcov" cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=./install
+      run: CFLAGS=="-fprofile-instr-generate -fcoverage-mapping" CXXFLAGS="-fprofile-instr-generate -fcoverage-mapping" cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/install
 
     - name: Build Z3
       # Build your program with the given configuration
@@ -44,7 +45,7 @@ jobs:
         cmake --build ${{github.workspace}}/build --target c_maxsat_example
 
     - name: Clone z3test
-      run: git clone https://github.com/z3prover/z3test z3test
+      run: git clone https://github.com/0152la/z3test z3test
 
     ## Testing
     #- name: Run test-z3
@@ -72,9 +73,10 @@ jobs:
     ## Artifact
     - name: Gather coverage
       run: |
-        cd ${{github.workspace}}
-        gcovr --html -o coverage.html --gcov-executable "llvm-cov gcov" .
-        cd -
+        llvm-profdata merge -sparse -o ${{github.workspace}}/cov.profdata ${{github.workspace}}/coverage_data/*
+        llvm-cov report -instr-profile=${{github.workspace}}/cov.profdata ${{github.workspace}}/build/z3
+        llvm-cov report -instr-profile=${{github.workspace}}/cov.profdata ${{github.workspace}}/build/libz3.so
+        llvm-cov show -format=html -output-dir=${{github.workspace}}/cov-report/ -instr-profile=${{github.workspace}}/cov.profdata ${{github.workspace}}/build/z3
 
     - name: Get date
       id: date
@@ -83,5 +85,5 @@ jobs:
     - uses: actions/upload-artifact@v2
       with:
         name: coverage-${{steps.date.outputs.date}}
-        path: ${{github.workspace}}/coverage.html
+        path: 
         retention-days: 10
