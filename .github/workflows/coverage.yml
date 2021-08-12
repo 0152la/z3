@@ -15,7 +15,6 @@ jobs:
       CXX: clang++
       BUILD_TYPE: Debug
       CMAKE_GENERATOR: Ninja
-      LLVM_PROFILE_FILE: ${{github.workspace}}/coverage_data/cov-%p.profraw
 
     steps:
     - uses: actions/checkout@v2
@@ -55,6 +54,8 @@ jobs:
         #cd -
 
     - name: Run examples
+      env:
+        LLVM_PROFILE_FILE: ${{github.workspace}}/coverage_data/cov-%p.profraw
       run: |
         ${{github.workspace}}/build/examples/c_example_build_dir/c_example
         ${{github.workspace}}/build/examples/cpp_example_build_dir/cpp_example
@@ -68,6 +69,8 @@ jobs:
         #python z3test/scripts/test_benchmarks.py build/z3 z3test/regressions/smt2-extra
 
     - name: Run coverage tests
+      env:
+        LLVM_PROFILE_FILE: ${{github.workspace}}/coverage_data/cov-%p.profraw
       run: python z3test/scripts/test_coverage_tests.py ./install z3test/coverage/cpp
 
     ## Artifact
