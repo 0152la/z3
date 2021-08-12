@@ -23,11 +23,11 @@ jobs:
       run: |
         sudo apt-get remove -y --purge man-db
         sudo apt-get update -y
-        sudo apt-get install -y gcovr ninja-build llvm
+        sudo apt-get install -y gcovr ninja-build llvm clang
 
     ## Building
     - name: Configure CMake Z3
-      run: CXXFLAGS="-fprofile-instr-generate -fcoverage-mapping" LDFLAGS="-fprofile-instr-generate" cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/install
+      run: CFLAGS=="--coverage" CXXFLAGS="--coverage" LDFLAGS="-lgcov" cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=./install
 
     - name: Build Z3
       # Build your program with the given configuration
@@ -44,7 +44,7 @@ jobs:
         cmake --build ${{github.workspace}}/build --target c_maxsat_example
 
     - name: Clone z3test
-      run: git clone https://github.com/0152la/z3test z3test
+      run: git clone https://github.com/z3prover/z3test z3test
 
     ## Testing
     #- name: Run test-z3
@@ -54,8 +54,6 @@ jobs:
         #cd -
 
     - name: Run examples
-      env:
-        LLVM_PROFILE_FILE: ${{github.workspace}}/coverage_data/cov-%p.profraw
       run: |
         ${{github.workspace}}/build/examples/c_example_build_dir/c_example
         ${{github.workspace}}/build/examples/cpp_example_build_dir/cpp_example
@@ -69,17 +67,15 @@ jobs:
         #python z3test/scripts/test_benchmarks.py build/z3 z3test/regressions/smt2-extra
 
     - name: Run coverage tests
-      env:
-        LLVM_PROFILE_FILE: ${{github.workspace}}/coverage_data/cov-%p.profraw
       run: python z3test/scripts/test_coverage_tests.py ./install z3test/coverage/cpp
 
     ## Artifact
     - name: Gather coverage
       run: |
-        llvm-profdata merge -sparse -o ${{github.workspace}}/cov.profdata ${{github.workspace}}/coverage_data/*
-        llvm-cov report -instr-profile=${{github.workspace}}/cov.profdata ${{github.workspace}}/build/z3
-        llvm-cov report -instr-profile=${{github.workspace}}/cov.profdata ${{github.workspace}}/build/libz3.so
-        llvm-cov show -format=html -output-dir=${{github.workspace}}/cov-report/ -instr-profile=${{github.workspace}}/cov.profdata ${{github.workspace}}/build/z3
+        cd ${{github.workspace}}
+        gcovr --gcov-executable "llvm-cov gcov" .
+        gcovr --html -o coverage.html --gcov-executable "llvm-cov gcov" .
+        cd -
 
     - name: Get date
       id: date
@@ -88,5 +84,5 @@ jobs:
     - uses: actions/upload-artifact@v2
       with:
         name: coverage-${{steps.date.outputs.date}}
-        path: ${{github.workspace}}/cov-report/
+        path: ${{github.workspace}}/coverage.html
         retention-days: 10
